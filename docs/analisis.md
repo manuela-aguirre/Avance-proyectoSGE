@@ -6,18 +6,29 @@
 - **Tamaño:** Pequeña
 
 ## 2. Procesos Clave
-- **Ventas:** El negocio no maneja ventas comerciales; en su lugar opera un servicio de préstamo de libros. Los usuarios registrados consultan el catálogo disponible y el sistema controla qué libros pueden prestarse según el stock disponible.
-- **Compras:** La biblioteca adquiere nuevos títulos a distintas editoriales (por ejemplo Pearson, McGraw-Hill, Alfaomega, Planeta, Trillas, Norma, Anaya, Penguin Random House, O'Reilly Media y Santillana) para ampliar el catálogo.
-- **Inventario:** Cada libro registra un campo `stock` que indica la cantidad de ejemplares disponibles. El inventario se organiza además por `editorial_id` y `genero_id`, lo que permite clasificar y consultar el material por casa editorial y por categoría temática.
-- **Otros:** Se gestionan usuarios autenticados (con `tipo_identificacion` y `numero_identificacion`), editoriales y géneros como catálogos de apoyo para clasificar los libros.
+- **Ventas:** El negocio no maneja ventas comerciales; se opera un servicio de préstamo de libros. Cada préstamo registra fecha de préstamo, fecha límite de devolución, fecha real de devolución y si aplica, el valor de la multa por retraso. El dashboard calcula sobre estos datos indicadores como préstamos activos, préstamos vencidos y multas pendientes.
+- **Compras:** La biblioteca adquiere nuevos títulos a distintas editoriales o diferentes librerías (por ejemplo Pearson, McGraw-Hill, Alfaomega, Planeta, Trillas, Norma, Anaya, Penguin Random House, O'Reilly Media y Santillana) para ampliar el catálogo dependiendo las necesidades de los estudiantes y profesores.
+- **Inventario:** Cada libro registra un campo `stock` que indica la cantidad de ejemplares disponibles. El sistema alerta cuando el stock de un título cae por debajo de un umbral mínimo. A nivel de modelo de negocio cada libro puede tener varios ejemplares físicos individuales, cada uno con su propia ubicación, código de barras, signatura y fecha de adquisición.
+- **Otros:** Los usuarios se identifican con el tipo de identificación (CC.TI. etc) y el número de este, editoriales y géneros como catálogos de apoyo. Por ahora solo se tiene el rol de administrador (Bibliotecario) permitiendo visualizar el panel de administrador (dashboard) con la lista de libros, usuarios con su correo verificado, prestamos y multas.
 
 ## 3. Entidades Identificadas (Tablas)
+
+**Implementadas en la base de datos (con migraciones):**
 - Usuarios (`users`)
 - Editoriales (`editorials`)
 - Géneros (`generos`)
 - Libros (`libros`)
 
-## 4. Diccionario de Datos (Mínimo 3 tablas)
+**Identificadas en el modelo de negocio, usadas actualmente solo como datos de apoyo (datos CSV simulados) para las estadísticas del dashboard, aún no migradas a la base de datos:**
+- Autor
+- Ejemplar (copia física individual de un libro: código de barras, signatura, ubicación, fecha de adquisición)
+- Ubicación (zona/estante/nivel donde se guarda cada ejemplar)
+- Préstamo (registro de préstamo por usuario, con fechas y multas)
+- Tablas de relación: libro-género (muchos a muchos), autor-libro (muchos a muchos), préstamo-ejemplar
+
+Estas entidades son las utilizadas en este avance del proyecto ayudándonos como tal a generar un sistema funcional `users`, `editorials`, `generos` y `libros`.
+
+## 4. Diccionario de Datos
 
 ### Tabla: users
 | Campo | Tipo | Descripción |
@@ -64,9 +75,10 @@
 | updated_at | TIMESTAMP | Fecha de última actualización |
 
 ## 5. Diagrama Entidad-Relación (MER)
-[Incluir imagen del diagrama ER — pendiente de agregar en `docs/diagrama_mer.png`]
 
-**Relaciones principales:**
+![Diagrama Entidad-Relación](diagrama_mer.jpeg)
+
+**Relaciones principales (entidades implementadas):**
 - `Editorial` 1:N `Libro` (una editorial publica muchos libros; cada libro pertenece a una editorial)
 - `Genero` 1:N `Libro` (un género agrupa muchos libros; cada libro pertenece a un género)
 - `User` consulta y gestiona el catálogo (autenticación para administrar libros, editoriales y géneros)
