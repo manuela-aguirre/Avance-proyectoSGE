@@ -140,7 +140,3 @@ Los seeders crean registros iniciales para apoyar la validación del negocio y d
 - Blade
 - Bootstrap/Tailwind
 - Git
-
-## 12. Resultado esperado
-
-El proyecto permite representar una solución de gestión básica para una biblioteca institucional, con una estructura ERP-like orientada a procesos de catalogación, gestión de inventario y consulta del material bibliográfico.
