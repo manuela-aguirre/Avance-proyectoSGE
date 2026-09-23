@@ -1,142 +1,120 @@
 # SGE - Sistema de Gestión de Biblioteca COTECNOVA
 
-Proyecto Laravel para la gestión del catálogo bibliográfico y la administración básica de una biblioteca universitaria. El sistema permite gestionar libros, editoriales, géneros y usuarios autenticados, con un módulo CRUD para la entidad principal y una base de datos estructurada para soportar procesos de catalogación y consulta.
 
-## 1. Descripción del proyecto
 
-La aplicación fue desarrollada como entregable del primer. Su objetivo principal es digitalizar y organizar el proceso de gestión del inventario bibliográfico, facilitando la administración del catálogo, la relación entre libros y sus categorías, y la operación básica de una biblioteca institucional.
+## ¿Qué hace el proyecto?
 
-## 2. Requisitos del sistema
+Permite manejar el catálogo de libros de la biblioteca: registrar libros, asociarlos a una editorial y a un género, controlar cuántos ejemplares hay disponibles (stock).
+## Qué necesitas tener instalado
+
+Se trabajó con Docker + Laravel Sail instalados directamente en el computador. Lo que sí necesitas:
 
 - Docker Desktop
-- WSL2 (si se trabaja desde Windows)
-- Composer
-- Laravel Sail
+- WSL2 (si estás en Windows, corre todo desde ahí, no desde `/mnt/c/...` porque se pone lento)
 - Git
+- Composer (o si no lo tienes, más abajo explicamos cómo instalarlo con Docker directamente)
 
-## 3. Instalación y configuración
+## Cómo correrlo en el navegador (paso a paso)
 
 ```bash
-# Clonar el repositorio
-git clone <URL-del-repositorio>
-cd sge
+# 1. Clonar el repo
+git clone https://github.com/manuela-aguirre/Avance-proyectoSGE.git
+cd Avance-proyectoSGE
 
-# Instalar dependencias de PHP
-composer install
-
-# Copiar variables de entorno
+# 2. Copiar el archivo de variables de entorno
 cp .env.example .env
 
-# Iniciar contenedores con Sail
+# 3. Instalar las dependencias de PHP
+composer install
+
+# 4. Levantar los contenedores (Laravel + MySQL)
 ./vendor/bin/sail up -d
 
-# Generar la clave de la aplicación
+# 5. Generar la key de la app
 ./vendor/bin/sail artisan key:generate
 
-# Ejecutar migraciones y sembrar datos de prueba
+# 6. Correr las migraciones y llenar la base con datos de prueba
 ./vendor/bin/sail artisan migrate:fresh --seed
+
+# 7. Instalar dependencias de frontend (Tailwind/Vite)
+./vendor/bin/sail npm install
+./vendor/bin/sail npm run build
 ```
 
-Luego se puede acceder a la aplicación desde el navegador y crear una cuenta en /register. Si se desea entrar rápidamente, el seeder crea un usuario de prueba con la cuenta test@example.com.
+Ya con eso se entra desde el navegador a `http://localhost`. Se puede registrar en `/register`, o entrar directo con el usuario que crea el seeder: `test@example.com`  `password` .
 
-## 4. Estructura del proyecto
+> Nota: si no se tiene Composer instalado localmente puedes correr este comando para instalar las dependencias usando un contenedor de Docker en vez de instalar PHP:
+> ```bash
+> docker run --rm -u "$(id -u):$(id -g)" -v "$(pwd):/var/www/html" -w /var/www/html laravelsail/php83-composer:latest composer install --ignore-platform-reqs
+> ```
 
-El proyecto sigue el patrón MVC de Laravel y está organizado en las carpetas estándar del framework:
+## Estructura del proyecto
 
-- app/ — modelos, controladores, componentes y lógica de negocio
-- database/migrations/ — migraciones de la base de datos
-- database/seeders/ — sembrado inicial de datos de prueba
-- resources/views/ — vistas Blade
-- routes/ — definiciones de rutas
-- docs/ — análisis de negocio, diccionario de datos y diagramas
+Se sigue la estructura estándar de Laravel:
 
-## 5. Entidades principales
+- `app/` → modelos y controladores
+- `database/migrations/` → las tablas de la base de datos
+- `database/seeders/` → los datos de prueba
+- `resources/views/` → las vistas Blade
+- `routes/` → las rutas de la app
+- `docs/` → el análisis del negocio, el diccionario de datos y el diagrama ER
 
-| Entidad | Descripción |
+## Las entidades que manejamos
+
+| Entidad | Para qué sirve |
 |---|---|
-| User | Usuarios de la aplicación y autenticación Laravel |
-| Editorial | Casa editorial que publica los libros |
-| Genero | Categoría o temática del libro |
-| Libro | Entidad principal del sistema, representa el catálogo bibliográfico |
+| User | Usuarios que se autentican en la app |
+| Editorial | Las editoriales que publican los libros |
+| Genero | Las categorías/géneros de los libros |
+| Libro | La entidad principal, el catálogo en sí |
 
-## 6. Relaciones del negocio
+**Relaciones:** una Editorial tiene muchos Libros, un Genero tiene muchos Libros, y cada Libro pertenece a una sola Editorial y a un solo Genero.
 
-- Editorial tiene muchos Libro.
-- Genero tiene muchos Libro.
-- Cada Libro pertenece a una Editorial y a un Genero.
+## El módulo CRUD (Libros)
 
-## 7. Módulo CRUD de libros
+Es la entidad principal del proyecto:
 
-El sistema cuenta con un módulo completo para la administración del catálogo de libros.
+- Rutas con `Route::resource('libros', LibroController::class)`
+- Controlador `LibroController` con las 7 acciones típicas (index, create, store, edit, update, destroy, show)
+- Vistas: `index`, `create` y `edit` en `resources/views/libros/`
+- Usamos `with(['editorial', 'genero'])` en el index para evitar el problema de las N+1 queries
+- Le agregamos dos scopes al modelo `Libro` para no repetir consultas: `scopeBuscar()` (busca por título/ISBN) y `scopeConStock()` (filtra los que tienen ejemplares disponibles)
 
-### Rutas
+## Datos de prueba
 
-```php
-Route::resource('libros', LibroController::class);
-```
-
-### Controlador
-
-El controlador principal es LibroController, y maneja las operaciones de:
-- listado index
-- creación create
-- almacenamiento store
-- edición edit
-- actualización update
-- eliminación destroy
-
-### Vistas Blade
-
-- resources/views/libros/index.blade.php
-- resources/views/libros/create.blade.php
-- resources/views/libros/edit.blade.php
-
-### Eager loading
-
-Se usa with(['editorial', 'genero']) para evitar el problema N+1 al listar libros y cargar sus relaciones.
-
-### Scopes reutilizables
-
-En el modelo Libro se definen scopes para reutilizar consultas:
-- scopeBuscar($query, $texto)
-- scopeConStock($query)
-
-## 8. Sembrado de datos de prueba
-
-Los seeders crean registros iniciales para apoyar la validación del negocio y del flujo CRUD.
+Los seeders cargan editoriales, géneros y libros de ejemplo para que no toque probar todo con la base vacía:
 
 ```bash
 ./vendor/bin/sail artisan db:seed
 ```
 
-## 9. Comandos útiles
+## Comandos que usamos seguido
 
 ```bash
-# Ejecutar migraciones desde cero
+# Resetear la base y volver a sembrar datos
 ./vendor/bin/sail artisan migrate:fresh --seed
 
-# Ver estado de migraciones
+# Ver el estado de las migraciones
 ./vendor/bin/sail artisan migrate:status
 
-# Abrir el shell de Laravel
+# Abrir Tinker para probar cosas en consola
 ./vendor/bin/sail artisan tinker
 
-# Revisar errores de la aplicación
+# Ver todas las rutas registradas
 ./vendor/bin/sail artisan route:list
 ```
 
-## 10. Documentación del entregable
+## Documentación del entregable
 
-- [docs/analisis.md](docs/analisis.md) — análisis del negocio y procesos clave
-- [docs/diccionario.md](docs/diccionario.md) — diccionario de datos
-- [docs/diagrama_mer.png](docs/diagrama_mer.png) — diagrama entidad-relación
+- [`docs/analisis.md`](docs/analisis.md) — análisis del negocio y los procesos clave
+- [`docs/diccionario.md`](docs/diccionario.md) — diccionario de datos de las tablas
+- [`docs/diagrama_mer.jpeg`](docs/diagrama_mer.jpeg) — diagrama entidad-relación
 
-## 11. Tecnologías utilizadas
+## Tecnologías se usa
 
-- Laravel
-- Laravel Sail
+- Laravel + Laravel Sail
 - Docker
 - MySQL
 - Blade
-- Bootstrap/Tailwind
-- Git
+- Tailwind CSS + Vite
+- Git / GitHub
