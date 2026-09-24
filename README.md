@@ -80,7 +80,7 @@ Una editorial tiene muchos libros, un género tiene muchos libros, y cada libro 
 |---|---|
 | [`docs/analisis.md`](docs/analisis.md) | Análisis del negocio y documentación completa del proyecto |
 | [`docs/diccionario.md`](docs/diccionario.md) | Diccionario de datos |
-| [`docs/diagrama_mer.jpeg`](docs/diagrama_mer.jpeg) | Diagrama entidad-relación |
+| [`docs/diagrama_mer.jpeg`](docs/diagrama_mer.jpg) | Diagrama entidad-relación |
 
 ## Tecnologías
 
