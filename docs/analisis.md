@@ -896,7 +896,7 @@ DESCRIBE libros;
 
 Lo que sigue, en el orden en que lo necesita el proyecto integrador:
 
-| Prioridad | Siguiente paso | Objetivo de la ficha al que aporta |
+| Prioridad | Siguiente paso | 
 |---|---|---|
 | 1 | Migrar `autor`, `autor_libro`, `ubicacion` y `ejemplar`, con sus modelos, relaciones y seeders | 
 | 2 | Pasar el género a la tabla puente `libro_genero` (N:M) y ampliar `users` con rol y límite de préstamos | 
